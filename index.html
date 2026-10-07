@@ -1216,6 +1216,8 @@
     // Checkbox metaEnabled : coché par défaut (undefined ou true)
     document.getElementById('metaEnabled').checked = s.params && s.params.metaEnabled !== undefined
       ? !!s.params.metaEnabled : true;
+    setMetaPanelOpen(['metaBudget', 'metaImpr', 'metaClics', 'metaLeads', 'metaClients']
+      .some(id => Number(p[id]) > 0));
     document.getElementById('simName').value = s.name || '';
     updateSimSelect();
     updatePublicLink();
@@ -1933,12 +1935,16 @@
   }
 
   // ============ INIT ============
-  // Toggle Extra Meta panel
-  document.getElementById('metaToggle').addEventListener('click', () => {
+  function setMetaPanelOpen(open) {
     const panel = document.getElementById('metaPanel');
     const chev = document.getElementById('metaChevron');
-    panel.hidden = !panel.hidden;
-    chev.style.transform = panel.hidden ? '' : 'rotate(90deg)';
+    panel.hidden = !open;
+    chev.style.transform = open ? 'rotate(90deg)' : '';
+  }
+
+  // Toggle Extra Meta panel
+  document.getElementById('metaToggle').addEventListener('click', () => {
+    setMetaPanelOpen(document.getElementById('metaPanel').hidden);
   });
   // Checkbox clicks don't toggle the panel
   document.getElementById('metaEnabledLabel').addEventListener('click', e => e.stopPropagation());
