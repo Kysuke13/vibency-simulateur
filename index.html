@@ -1,0 +1,1682 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Simulateur de budget et de conversions Google Ads — Vibency.">
+<title>Vibency Simulateur</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<style>
+  :root {
+    --bg: #FAFAF7;
+    --surface: #FFFFFF;
+    --surface-alt: #F5F5F1;
+    --border: #E4E4DC;
+    --border-strong: #D1D1C7;
+    --ink: #1A1F2C;
+    --muted: #6B7280;
+    --muted-2: #9CA3AF;
+    --accent: #2563EB;
+    --accent-hover: #1D4ED8;
+    --accent-soft: #EFF4FF;
+    --success: #059669;
+    --success-soft: #ECFDF5;
+    --warning: #D97706;
+    --warning-soft: #FEF7ED;
+    --danger: #DC2626;
+    --danger-soft: #FEF2F2;
+    --shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.05);
+    --shadow-md: 0 2px 8px rgba(16, 24, 40, 0.06);
+    color-scheme: light;
+  }
+  :root:not([data-theme="light"]) {
+    @media (prefers-color-scheme: dark) {
+      --bg: #0F1419;
+      --surface: #1A1F2C;
+      --surface-alt: #232936;
+      --border: #2D3748;
+      --border-strong: #3D4756;
+      --ink: #F9FAFB;
+      --muted: #9CA3AF;
+      --muted-2: #6B7280;
+      --accent: #60A5FA;
+      --accent-hover: #93C5FD;
+      --accent-soft: #1E3A8A;
+      --success: #34D399;
+      --success-soft: #064E3B;
+      --warning: #FBBF24;
+      --warning-soft: #78350F;
+      --danger: #F87171;
+      --danger-soft: #7F1D1D;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0F1419;
+    --surface: #1A1F2C;
+    --surface-alt: #232936;
+    --border: #2D3748;
+    --border-strong: #3D4756;
+    --ink: #F9FAFB;
+    --muted: #9CA3AF;
+    --muted-2: #6B7280;
+    --accent: #60A5FA;
+    --accent-hover: #93C5FD;
+    --accent-soft: #1E3A8A;
+    --success: #34D399;
+    --success-soft: #064E3B;
+    --warning: #FBBF24;
+    --warning-soft: #78350F;
+    --danger: #F87171;
+    --danger-soft: #7F1D1D;
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  body {
+    margin: 0;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    line-height: 1.5;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  }
+  .wrap {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 24px 16px 64px;
+  }
+
+  /* Header */
+  header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 32px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  h1 {
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    margin: 0 0 4px;
+    text-wrap: balance;
+  }
+  .subtitle {
+    font-size: 14px;
+    color: var(--muted);
+    margin: 0;
+  }
+  .theme-toggle {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--ink);
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .theme-toggle:hover { border-color: var(--border-strong); }
+
+  /* Simulation manager */
+  .sim-bar {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 10px 14px;
+    box-shadow: var(--shadow-sm);
+    flex-wrap: wrap;
+  }
+  .sim-name {
+    flex: 1 1 200px;
+    min-width: 0;
+    border: 1px solid transparent;
+    background: var(--surface-alt);
+    padding: 8px 12px;
+    font: 600 15px/1 'Inter', sans-serif;
+    color: var(--ink);
+    border-radius: 8px;
+    outline: none;
+    transition: all .15s;
+  }
+  .sim-name:hover:not(:focus) { background: var(--surface); border-color: var(--border); }
+  .sim-name:focus { border-color: var(--accent); background: var(--surface); box-shadow: 0 0 0 3px var(--accent-soft); }
+  .sim-select {
+    flex: 0 1 auto;
+    background: var(--surface-alt);
+    border: 1px solid var(--border);
+    color: var(--ink);
+    padding: 8px 12px;
+    font: 500 13px/1 'Inter', sans-serif;
+    border-radius: 8px;
+    cursor: pointer;
+    outline: none;
+    max-width: 240px;
+  }
+  .sim-select:hover { border-color: var(--border-strong); }
+  .sim-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--ink);
+    padding: 8px 12px;
+    border-radius: 8px;
+    font: 500 13px/1 'Inter', sans-serif;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all .15s;
+  }
+  .sim-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .sim-btn.primary { background: var(--accent); border-color: var(--accent); color: white; }
+  .sim-btn.primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); color: white; }
+  .sim-btn.danger:hover { border-color: var(--danger); color: var(--danger); }
+
+  /* Section */
+  section {
+    margin-bottom: 28px;
+  }
+  h2 {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    margin: 0 0 12px;
+  }
+  h2.collapsible-h2:hover { color: var(--ink); }
+
+  /* Params grid */
+  .params {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: var(--shadow-sm);
+  }
+  .param {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .param label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+  }
+  .param-input {
+    display: flex;
+    align-items: center;
+    background: var(--surface-alt);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0 12px;
+    transition: border-color .15s;
+  }
+  .param-input:focus-within {
+    border-color: var(--accent);
+    background: var(--surface);
+  }
+  .param-input input {
+    flex: 1;
+    min-width: 0;
+    border: none;
+    background: transparent;
+    padding: 10px 0;
+    font: 500 15px/1 'Inter', sans-serif;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+    outline: none;
+  }
+  .param-input .unit {
+    font-size: 13px;
+    color: var(--muted);
+    padding-left: 4px;
+  }
+
+  /* Keywords table */
+  .table-container {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+  }
+  .table-scroll { overflow-x: auto; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    min-width: 720px;
+  }
+  thead th {
+    text-align: left;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    padding: 12px 14px;
+    background: var(--surface-alt);
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  thead th.sortable {
+    cursor: pointer;
+    user-select: none;
+    transition: color .15s;
+  }
+  thead th.sortable:hover { color: var(--ink); }
+  .sort-arrow {
+    display: inline-block;
+    margin-left: 4px;
+    font-size: 10px;
+    opacity: 0.35;
+    font-weight: 400;
+    transition: opacity .15s, color .15s;
+  }
+  thead th.sort-active { color: var(--accent); }
+  thead th.sort-active .sort-arrow { opacity: 1; color: var(--accent); }
+  thead th.num, thead th.compute { text-align: right; }
+  tbody td {
+    padding: 4px 6px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover { background: var(--surface-alt); }
+  tbody td.compute {
+    text-align: right;
+    padding: 10px 14px;
+    font-variant-numeric: tabular-nums;
+    color: var(--muted);
+    font-weight: 500;
+  }
+  tbody td.compute.strong {
+    color: var(--ink);
+    font-weight: 600;
+  }
+  .cell-input {
+    width: 100%;
+    border: 1px solid transparent;
+    background: transparent;
+    padding: 10px 12px;
+    font: 400 13px/1.4 'Inter', sans-serif;
+    color: var(--ink);
+    border-radius: 6px;
+    outline: none;
+    transition: all .15s;
+  }
+  .cell-input:hover:not(:focus) {
+    background: var(--surface-alt);
+  }
+  .cell-input:focus {
+    border-color: var(--accent);
+    background: var(--surface);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+  .cell-input.num {
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+  .cell-input.auto {
+    color: var(--muted);
+    font-style: italic;
+  }
+  .row-actions {
+    padding: 4px 8px !important;
+    text-align: center;
+    width: 40px;
+  }
+  .icon-btn {
+    background: transparent;
+    border: none;
+    color: var(--muted-2);
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 6px;
+    font-size: 16px;
+    line-height: 1;
+    transition: all .15s;
+  }
+  .icon-btn:hover {
+    background: var(--danger-soft);
+    color: var(--danger);
+  }
+
+  .table-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background: var(--surface-alt);
+    border-top: 1px solid var(--border);
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .add-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--ink);
+    padding: 8px 14px;
+    border-radius: 8px;
+    font: 500 13px/1 'Inter', sans-serif;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all .15s;
+  }
+  .add-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .totals-inline {
+    display: flex;
+    gap: 24px;
+    font-size: 13px;
+    flex-wrap: wrap;
+  }
+  .totals-inline span { color: var(--muted); }
+  .totals-inline b {
+    color: var(--ink);
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    margin-left: 6px;
+  }
+
+  /* KPI tiles - funnel */
+  .funnel-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+  }
+  .tile {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 18px;
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .tile-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+  }
+  .tile-value {
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+  }
+  .tile-value.accent { color: var(--accent); }
+  .tile-value.success { color: var(--success); }
+  .tile-value.warn { color: var(--warning); }
+  .tile-value.danger { color: var(--danger); }
+  .tile-sub {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+  .tile.highlight {
+    background: linear-gradient(135deg, var(--accent-soft) 0%, var(--surface) 100%);
+    border-color: var(--accent);
+  }
+
+  /* Budget bar */
+  .budget-bar {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 20px;
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .budget-bar-head {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+  }
+  .budget-bar-head b { font-variant-numeric: tabular-nums; }
+  .bar-track {
+    height: 8px;
+    background: var(--surface-alt);
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+  }
+  .bar-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 4px;
+    transition: width .3s, background-color .3s;
+  }
+  .bar-fill.ok { background: var(--success); }
+  .bar-fill.warn { background: var(--warning); }
+  .bar-fill.over { background: var(--danger); }
+
+  /* Funnel table (conversion) */
+  .funnel-table {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+  }
+  .funnel-row {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    align-items: center;
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    gap: 16px;
+  }
+  .funnel-row:last-child { border-bottom: none; }
+  .funnel-row.emphasis {
+    background: var(--accent-soft);
+  }
+  .funnel-row.success-row {
+    background: var(--success-soft);
+  }
+  .funnel-step {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .step-num {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--surface-alt);
+    border: 1px solid var(--border);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--muted);
+    flex-shrink: 0;
+  }
+  .step-name {
+    font-weight: 500;
+    font-size: 14px;
+  }
+  .step-formula {
+    color: var(--muted);
+    font-size: 11px;
+    margin-top: 2px;
+  }
+  .funnel-value {
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+    font-size: 16px;
+    color: var(--ink);
+    text-align: right;
+  }
+  .funnel-rate {
+    font-size: 11px;
+    color: var(--muted);
+    text-align: right;
+    min-width: 60px;
+  }
+
+  @media (max-width: 640px) {
+    h1 { font-size: 22px; }
+    .tile-value { font-size: 20px; }
+    .funnel-row { grid-template-columns: 1fr auto; gap: 8px; }
+    .funnel-rate { display: none; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Vibency Simulateur</h1>
+      <p class="subtitle">Simulateur de budget &amp; conversions Google Ads</p>
+    </div>
+    <button class="theme-toggle" id="themeBtn">
+      <span id="theme-icon">🌙</span>
+    </button>
+  </header>
+
+  <section>
+    <h2>Simulation</h2>
+    <div class="sim-bar">
+      <input class="sim-name" id="simName" placeholder="Nom de la simulation...">
+      <select class="sim-select" id="simSelect" title="Charger une simulation"></select>
+      <button class="sim-btn primary" id="simNewBtn">+ Nouvelle</button>
+      <button class="sim-btn" id="simExportBtn" title="Exporter en HTML standalone avec les sims int&eacute;gr&eacute;es">&#128229; Export HTML</button>
+      <button class="sim-btn danger" id="simDeleteBtn" title="Supprimer cette simulation">&times;</button>
+    </div>
+  </section>
+
+  <section>
+    <h2>Param&egrave;tres</h2>
+    <div class="params">
+      <div class="param">
+        <label>Budget mensuel</label>
+        <div class="param-input">
+          <input type="number" id="budget" value="2000" min="0" step="100">
+          <span class="unit">&euro;</span>
+        </div>
+      </div>
+      <div class="param">
+        <label>Panier moyen</label>
+        <div class="param-input">
+          <input type="number" id="panier" value="4500" min="0" step="100">
+          <span class="unit">&euro;</span>
+        </div>
+      </div>
+      <div class="param">
+        <label>Impression rate</label>
+        <div class="param-input">
+          <input type="number" id="imprRate" value="60" min="0" max="100" step="5">
+          <span class="unit">%</span>
+        </div>
+      </div>
+      <div class="param">
+        <label>CTR d&eacute;faut (nouvelles lignes)</label>
+        <div class="param-input">
+          <input type="number" id="ctrDefault" value="10" min="0" max="100" step="1">
+          <span class="unit">%</span>
+        </div>
+      </div>
+      <div class="param">
+        <label>Conversion LP</label>
+        <div class="param-input">
+          <input type="number" id="convLP" value="7.5" min="0" max="100" step="0.5">
+          <span class="unit">%</span>
+        </div>
+      </div>
+      <div class="param">
+        <label>Taux closing</label>
+        <div class="param-input">
+          <input type="number" id="closing" value="30" min="0" max="100" step="5">
+          <span class="unit">%</span>
+        </div>
+      </div>
+      <div class="param">
+        <label>No-show</label>
+        <div class="param-input">
+          <input type="number" id="noshow" value="20" min="0" max="100" step="5">
+          <span class="unit">%</span>
+        </div>
+      </div>
+      <div class="param">
+        <label>Marge brute</label>
+        <div class="param-input">
+          <input type="number" id="marge" value="30" min="0" max="100" step="5">
+          <span class="unit">%</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Mots-cl&eacute;s &middot; aper&ccedil;u simplifi&eacute;</h2>
+    <div class="table-container">
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr id="kwHeaderRow">
+              <th class="sortable" data-sort="kw" style="width: 26%">Mot-cl&eacute; <span class="sort-arrow">&#8597;</span></th>
+              <th class="num sortable" data-sort="vol" style="width: 10%">Volume /mois <span class="sort-arrow">&#8597;</span></th>
+              <th class="num sortable" data-sort="cpc" style="width: 11%">CPC haut (&euro;) <span class="sort-arrow">&#8597;</span></th>
+              <th class="num sortable" data-sort="ctr" style="width: 9%">CTR (%) <span class="sort-arrow">&#8597;</span></th>
+              <th class="compute sortable" data-sort="clics" style="width: 9%">Clics <span class="sort-arrow">&#8597;</span></th>
+              <th class="compute sortable" data-sort="leads" style="width: 9%">Leads <span class="sort-arrow">&#8597;</span></th>
+              <th class="num sortable" data-sort="budget" style="width: 12%" title="Budget allou&eacute; &agrave; ce mot-cl&eacute; (&eacute;ditable)">Budget &euro; <span class="sort-arrow">&#8597;</span></th>
+              <th class="compute sortable" data-sort="max" style="width: 11%" title="Co&ucirc;t max sans plafond budget">Max &euro; <span class="sort-arrow">&#8597;</span></th>
+              <th class="row-actions"></th>
+            </tr>
+          </thead>
+          <tbody id="kwBody"></tbody>
+        </table>
+      </div>
+      <div id="importPanel" hidden style="border-top: 1px solid var(--border); padding: 16px; background: var(--surface-alt);">
+        <div style="font-size: 12px; color: var(--muted); margin-bottom: 8px;">
+          Colle une ligne par mot-cl&eacute; au format : <b>mot-cl&eacute; &lt;tab&gt; volume &lt;tab&gt; CPC haut &lt;tab&gt; CTR (optionnel)</b>. Compatible copier-coller depuis Excel/Google Sheets. S&eacute;parateurs accept&eacute;s : tab, point-virgule, virgule.
+        </div>
+        <textarea id="importText" style="width: 100%; min-height: 140px; font-family: 'Menlo', 'Consolas', monospace; font-size: 12px; padding: 10px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); color: var(--ink); resize: vertical; outline: none;" placeholder="location nacelle	12100	1.31	3&#10;location manitou	1000	1.71	12&#10;..."></textarea>
+        <div style="display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap;">
+          <button class="add-btn primary sim-btn" id="importDoBtn" style="background: var(--accent); border-color: var(--accent); color: white;">Ajouter &agrave; la simulation</button>
+          <button class="add-btn" id="importReplaceBtn" title="Remplace toute la liste actuelle">Remplacer la liste</button>
+          <button class="add-btn" id="importCancelBtn">Annuler</button>
+          <span id="importStatus" style="font-size: 12px; color: var(--muted); align-self: center;"></span>
+        </div>
+      </div>
+      <div class="table-footer">
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+          <button class="add-btn" id="addRowBtn">+ Ajouter un mot-cl&eacute;</button>
+          <button class="add-btn" id="importBtn" title="Importer plusieurs mots-cl&eacute;s d'un coup">&darr; Importer en masse</button>
+          <button class="add-btn" id="unlockAllBtn" title="Vide tous les budgets pour les remettre en mode auto">&#128275; Tout en auto</button>
+          <button class="add-btn" id="resetBtn" title="Remplace la liste actuelle par les mots-cl&eacute;s d'exemple">&#8635; Charger l'exemple</button>
+        </div>
+        <div class="totals-inline">
+          <div><span>Volume total</span><b id="totVol">0</b></div>
+          <div><span>Clics total</span><b id="totClics">0</b></div>
+          <div><span>Co&ucirc;t projet&eacute;</span><b id="totCost">0 &euro;</b></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Budget vs projection</h2>
+    <div class="budget-bar">
+      <div class="budget-bar-head">
+        <span id="budgetLabel">Utilisation du budget</span>
+        <span><b id="budgetPct">0%</b></span>
+      </div>
+      <div class="bar-track">
+        <div class="bar-fill" id="budgetFill" style="width: 0%"></div>
+      </div>
+      <div class="budget-bar-head" style="color: var(--muted); font-size: 12px;">
+        <span><b id="budgetUsed">0 &euro;</b> projet&eacute;</span>
+        <span>sur <b id="budgetTarget">2 000 &euro;</b> cible &middot; &eacute;cart <b id="budgetDiff">0 &euro;</b></span>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2 class="collapsible-h2" id="metaToggle" style="cursor: pointer; user-select: none; display: flex; align-items: center; gap: 10px;">
+      <label id="metaEnabledLabel" style="display: inline-flex; align-items: center; gap: 6px; cursor: pointer; font-size: 11px; text-transform: none; letter-spacing: 0; font-weight: 500; color: var(--ink);">
+        <input type="checkbox" id="metaEnabled" checked style="cursor: pointer; accent-color: var(--accent);">
+        <span>Actif</span>
+      </label>
+      <span style="flex: 1;">Extra Meta <span style="font-size: 10px; color: var(--muted-2); font-weight: 400; margin-left: 6px;">(ajouter des stats d'autres campagnes aux totaux)</span></span>
+      <span id="metaChevron" style="transition: transform .2s;">&#9656;</span>
+    </h2>
+    <div class="params" id="metaPanel" hidden>
+      <div class="param">
+        <label>Budget</label>
+        <div class="param-input">
+          <input type="number" id="metaBudget" value="0" min="0" step="10">
+          <span class="unit">&euro;</span>
+        </div>
+      </div>
+      <div class="param">
+        <label>Impressions</label>
+        <div class="param-input">
+          <input type="number" id="metaImpr" value="0" min="0" step="100">
+        </div>
+      </div>
+      <div class="param">
+        <label>Clics</label>
+        <div class="param-input">
+          <input type="number" id="metaClics" value="0" min="0" step="1">
+        </div>
+      </div>
+      <div class="param">
+        <label>Leads</label>
+        <div class="param-input">
+          <input type="number" id="metaLeads" value="0" min="0" step="1">
+        </div>
+      </div>
+      <div class="param">
+        <label>Clients</label>
+        <div class="param-input">
+          <input type="number" id="metaClients" value="0" min="0" step="0.1">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Funnel de conversion</h2>
+    <div class="funnel-table" id="funnelTable"></div>
+  </section>
+
+  <section>
+    <h2>Indicateurs business</h2>
+    <div class="funnel-grid">
+      <div class="tile">
+        <span class="tile-label">CPC moyen</span>
+        <span class="tile-value" id="kpiCPC">&ndash;</span>
+      </div>
+      <div class="tile">
+        <span class="tile-label">CPL</span>
+        <span class="tile-value" id="kpiCPL">&ndash;</span>
+      </div>
+      <div class="tile">
+        <span class="tile-label">CPA (par client)</span>
+        <span class="tile-value" id="kpiCPA">&ndash;</span>
+      </div>
+      <div class="tile highlight">
+        <span class="tile-label">CA / mois</span>
+        <span class="tile-value accent" id="kpiCA">&ndash;</span>
+        <span class="tile-sub" id="kpiClients">&ndash; clients</span>
+      </div>
+      <div class="tile">
+        <span class="tile-label">Marge brute</span>
+        <span class="tile-value success" id="kpiMarge">&ndash;</span>
+        <span class="tile-sub" id="kpiMargePct">&ndash; de CA</span>
+      </div>
+      <div class="tile">
+        <span class="tile-label">Rentabilit&eacute; pub</span>
+        <span class="tile-value" id="kpiRent">&ndash;</span>
+        <span class="tile-sub" id="kpiROAS">ROAS &ndash;</span>
+      </div>
+    </div>
+  </section>
+</div>
+
+<div id="exportModal" hidden style="position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 20px;">
+  <div style="background: var(--surface); border-radius: 12px; padding: 24px; max-width: 560px; width: 100%; max-height: 90vh; display: flex; flex-direction: column; gap: 14px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); overflow: auto;">
+    <h3 style="margin: 0; font-size: 18px; font-weight: 700;">Exporter en HTML autonome</h3>
+    <p style="margin: 0; font-size: 13px; color: var(--muted); line-height: 1.5;">
+      Choisis les simulations &agrave; inclure. Le fichier HTML ne contiendra que celles-ci. Ton client les voit, modifie, et ses changements sont sauv&eacute;s dans <b>son</b> localStorage uniquement.
+    </p>
+
+    <div>
+      <div style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin-bottom: 8px;">Simulations &agrave; inclure</div>
+      <div id="exportSimList" style="display: flex; flex-direction: column; gap: 6px; max-height: 200px; overflow-y: auto; padding: 10px; background: var(--surface-alt); border: 1px solid var(--border); border-radius: 8px;"></div>
+    </div>
+
+    <div>
+      <div style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin-bottom: 6px;">Simulation active &agrave; l'ouverture</div>
+      <select id="exportActiveSim" class="sim-select" style="width: 100%; max-width: none;"></select>
+    </div>
+
+    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+      <button class="sim-btn primary" id="exportDownloadBtn" style="background: var(--accent); border-color: var(--accent); color: white;">&#128190; T&eacute;l&eacute;charger .html</button>
+      <button class="sim-btn" id="exportCopyBtn">&#128203; Copier le code</button>
+      <button class="sim-btn" id="exportOpenTabBtn">&#128279; Ouvrir dans un nouvel onglet</button>
+      <button class="sim-btn" id="exportCloseBtn" style="margin-left: auto;">Fermer</button>
+    </div>
+    <div id="exportStatus" style="font-size: 12px; color: var(--muted); min-height: 16px;"></div>
+    <details style="font-size: 11px; color: var(--muted);">
+      <summary style="cursor: pointer;">Voir / copier le code HTML brut</summary>
+      <textarea id="exportText" readonly style="width: 100%; min-height: 120px; max-height: 220px; font-family: 'Menlo', 'Consolas', monospace; font-size: 10px; padding: 8px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface-alt); color: var(--ink); resize: vertical; outline: none; margin-top: 6px;"></textarea>
+    </details>
+  </div>
+</div>
+
+<script>
+  // ============ STATE ============
+  const DEFAULT_KEYWORDS = [
+    { kw: 'location nacelle',              vol: 12100, cpc: 1.31, ctr: 3 },
+    { kw: 'location nacelle sur camion',   vol: 2900,  cpc: 1.41, ctr: 8 },
+    { kw: 'location camion nacelle',       vol: 2900,  cpc: 1.41, ctr: 8 },
+    { kw: 'location nacelle camion',       vol: 2900,  cpc: 1.41, ctr: 8 },
+    { kw: 'location chariot \u00e9l\u00e9vateur',    vol: 1600,  cpc: 3.99, ctr: 6 },
+    { kw: 'location chariot elevateur',    vol: 1600,  cpc: 3.99, ctr: 6 },
+    { kw: 'location nacelle prix',         vol: 1300,  cpc: 0.96, ctr: 10 },
+    { kw: 'prix location nacelle',         vol: 1300,  cpc: 0.96, ctr: 10 },
+    { kw: 'location t\u00e9lescopique',         vol: 1000,  cpc: 2.15, ctr: 10 },
+    { kw: 'location manitou',              vol: 1000,  cpc: 1.71, ctr: 12 },
+    { kw: 'riwal',                         vol: 880,   cpc: 6.16, ctr: 15 },
+    { kw: 'location chariot t\u00e9lescopique', vol: 590,   cpc: 2.73, ctr: 12 },
+    { kw: 'location nacelle ciseaux',      vol: 480,   cpc: 1.56, ctr: 15 },
+    { kw: 'location nacelle \u00e0 ciseaux',    vol: 480,   cpc: 1.56, ctr: 15 },
+    { kw: 'location nacelle araign\u00e9e',     vol: 480,   cpc: 2.05, ctr: 15 },
+    { kw: 'location fenwick',              vol: 480,   cpc: 2.98, ctr: 15 },
+    { kw: 'location nacelle \u00e9l\u00e9vatrice',   vol: 390,   cpc: 1.03, ctr: 15 },
+    { kw: 'location grue araign\u00e9e',        vol: 390,   cpc: 1.92, ctr: 15 },
+    { kw: 'tarif location nacelle',        vol: 390,   cpc: 0.77, ctr: 15 },
+    { kw: 'location nacelle tarif',        vol: 390,   cpc: 0.77, ctr: 15 },
+  ];
+
+  const DEFAULT_PARAMS = {
+    budget: 2000, panier: 4500, imprRate: 60, ctrDefault: 10,
+    convLP: 7.5, closing: 30, noshow: 20, marge: 30,
+    metaBudget: 0, metaImpr: 0, metaClics: 0, metaLeads: 0, metaClients: 0,
+  };
+
+  const PARAM_IDS = ['budget', 'panier', 'imprRate', 'ctrDefault', 'convLP', 'closing', 'noshow', 'marge',
+                     'metaBudget', 'metaImpr', 'metaClics', 'metaLeads', 'metaClients'];
+
+  let keywords = [];
+  let state = { sims: [], activeId: null };
+
+  // Détermine la clé localStorage : si on est dans un export (initial-state présent avec exportId),
+  // on utilise une clé unique à cet export pour éviter le partage de localStorage entre fichiers file://
+  let STORAGE_KEY = 'sea-estimator-state';
+  let embeddedState = null;
+  try {
+    const embedded = document.getElementById('initial-state');
+    if (embedded && embedded.textContent && embedded.textContent.trim()) {
+      embeddedState = JSON.parse(embedded.textContent);
+      if (embeddedState && embeddedState.exportId) {
+        STORAGE_KEY = 'sea-estimator-state--' + embeddedState.exportId;
+      }
+    }
+  } catch (e) { embeddedState = null; }
+
+  // Load state (multi-sim) : priorité = localStorage > initial embarqué dans l'HTML > migration ancienne
+  try {
+    const storedState = localStorage.getItem(STORAGE_KEY);
+    if (storedState) {
+      state = JSON.parse(storedState);
+    } else if (embeddedState) {
+      // Charge l'état embarqué (depuis l'export HTML) la toute première fois
+      state = embeddedState;
+    } else {
+      {
+        // Migrate from old format
+        const oldKws = localStorage.getItem('sea-estimator-kws');
+        if (oldKws) {
+          const parsedKws = JSON.parse(oldKws);
+          if (Array.isArray(parsedKws) && parsedKws.length) {
+            const id = 'sim_' + Date.now();
+            state = {
+              sims: [{
+                id, name: 'Ma simulation', keywords: parsedKws,
+                params: { ...DEFAULT_PARAMS }, updatedAt: Date.now(),
+              }],
+              activeId: id,
+            };
+          }
+        }
+      }
+    }
+  } catch (e) { state = { sims: [], activeId: null }; }
+
+  // Ensure at least one sim exists
+  if (!state.sims || !state.sims.length) {
+    const id = 'sim_' + Date.now();
+    state = {
+      sims: [{
+        id, name: 'Ma simulation', keywords: DEFAULT_KEYWORDS.map(k => ({ ...k })),
+        params: { ...DEFAULT_PARAMS }, updatedAt: Date.now(),
+      }],
+      activeId: id,
+    };
+  }
+  if (!state.activeId || !state.sims.find(s => s.id === state.activeId)) {
+    state.activeId = state.sims[0].id;
+  }
+
+  function activeSim() { return state.sims.find(s => s.id === state.activeId); }
+
+  function saveState() {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+  }
+
+  function saveCurrentToSim() {
+    const s = activeSim();
+    if (!s) return;
+    s.keywords = keywords.map(k => ({ ...k }));
+    s.params = {};
+    PARAM_IDS.forEach(id => {
+      s.params[id] = parseFloat(document.getElementById(id).value) || 0;
+    });
+    s.params.metaEnabled = document.getElementById('metaEnabled').checked;
+    s.updatedAt = Date.now();
+    saveState();
+  }
+
+  function loadActiveSim() {
+    const s = activeSim();
+    if (!s) return;
+    keywords = (s.keywords || []).map(k => ({ ...k }));
+    keywords.forEach(k => { if (k.ctr == null) k.ctr = 10; });
+    const p = { ...DEFAULT_PARAMS, ...(s.params || {}) };
+    PARAM_IDS.forEach(id => {
+      document.getElementById(id).value = p[id];
+    });
+    // Checkbox metaEnabled : coché par défaut (undefined ou true)
+    document.getElementById('metaEnabled').checked = s.params && s.params.metaEnabled !== undefined
+      ? !!s.params.metaEnabled : true;
+    document.getElementById('simName').value = s.name || '';
+    updateSimSelect();
+    renderTable();
+  }
+
+  function updateSimSelect() {
+    const sel = document.getElementById('simSelect');
+    sel.innerHTML = '';
+    state.sims.forEach(s => {
+      const opt = document.createElement('option');
+      opt.value = s.id;
+      opt.textContent = s.name || '(sans nom)';
+      if (s.id === state.activeId) opt.selected = true;
+      sel.appendChild(opt);
+    });
+  }
+
+  function switchSim(id) {
+    if (id === state.activeId) return;
+    saveCurrentToSim();
+    state.activeId = id;
+    saveState();
+    loadActiveSim();
+  }
+
+  function newSim() {
+    saveCurrentToSim();
+    const id = 'sim_' + Date.now();
+    const n = state.sims.length + 1;
+    state.sims.push({
+      id, name: 'Simulation ' + n, keywords: [],
+      params: { ...DEFAULT_PARAMS }, updatedAt: Date.now(),
+    });
+    state.activeId = id;
+    saveState();
+    loadActiveSim();
+  }
+
+  function deleteSim() {
+    if (state.sims.length <= 1) {
+      // Reset the only sim instead of deleting
+      const s = activeSim();
+      s.keywords = [];
+      s.params = { ...DEFAULT_PARAMS };
+      s.name = 'Simulation 1';
+      s.updatedAt = Date.now();
+      saveState();
+      loadActiveSim();
+      return;
+    }
+    const idx = state.sims.findIndex(s => s.id === state.activeId);
+    if (idx === -1) return;
+    state.sims.splice(idx, 1);
+    state.activeId = state.sims[Math.min(idx, state.sims.length - 1)].id;
+    saveState();
+    loadActiveSim();
+  }
+
+  function renameSim(newName) {
+    const s = activeSim();
+    if (!s) return;
+    s.name = newName || '(sans nom)';
+    s.updatedAt = Date.now();
+    saveState();
+    updateSimSelect();
+  }
+
+  // ============ EXPORT HTML ============
+  function buildExportedHTML(filteredState) {
+    // Chaque export reçoit un ID unique → sa propre clé localStorage côté client, pas de bleed
+    const exportId = 'exp_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+    const payload = { ...filteredState, exportId };
+    const stateJSON = JSON.stringify(payload)
+      .replace(/</g, '\\u003c')
+      .replace(/>/g, '\\u003e');
+
+    // Clone profond du document pour nettoyer sans toucher au DOM live
+    const clone = document.documentElement.cloneNode(true);
+
+    // Masque le modal d'export et vide son contenu dynamique
+    const modal = clone.querySelector('#exportModal');
+    if (modal) {
+      modal.setAttribute('hidden', '');
+      const list = modal.querySelector('#exportSimList'); if (list) list.innerHTML = '';
+      const sel = modal.querySelector('#exportActiveSim'); if (sel) sel.innerHTML = '';
+      const status = modal.querySelector('#exportStatus'); if (status) status.innerHTML = '';
+      // CRITIQUE : vider la valeur du textarea d'export (sinon serialization récursive =
+      // le HTML précédent, qui contient une balise de fin de script, termine prématurément le script hôte)
+      const exportTa = modal.querySelector('#exportText'); if (exportTa) { exportTa.value = ''; exportTa.textContent = ''; }
+    }
+
+    // Masque le panneau d'import si ouvert
+    const importPanel = clone.querySelector('#importPanel');
+    if (importPanel) importPanel.setAttribute('hidden', '');
+    const importStatus = clone.querySelector('#importStatus');
+    if (importStatus) importStatus.innerHTML = '';
+
+    // Vide le tbody des mots-clés (il sera re-rendu au chargement par renderTable)
+    const kwBody = clone.querySelector('#kwBody');
+    if (kwBody) kwBody.innerHTML = '';
+
+    // Vide les options du dropdown simSelect (sera repeuplé par updateSimSelect)
+    const simSelect = clone.querySelector('#simSelect');
+    if (simSelect) simSelect.innerHTML = '';
+
+    // Retire un état embarqué précédent dans le DOM (pas via regex :
+    // le source JS contient la même balise et la regex avalait le reste du script)
+    const previousState = clone.querySelector('#initial-state');
+    if (previousState) previousState.remove();
+
+    let html = clone.outerHTML;
+
+    const scriptClose = '<' + '/script>';
+    const inject = '<script type="application/json" id="initial-state">' + stateJSON + scriptClose + '\n';
+    if (html.indexOf('</head>') !== -1) {
+      html = html.replace('</head>', inject + '</head>');
+    } else {
+      html = html.replace('<body', inject + '<body');
+    }
+    if (!/^\s*<!doctype/i.test(html)) {
+      html = '<!DOCTYPE html>\n' + html;
+    }
+    return html;
+  }
+
+  // Récupère les IDs des sims cochées + la sim active choisie
+  function getExportSelection() {
+    const checkedIds = [...document.querySelectorAll('#exportSimList input[type=checkbox]:checked')]
+      .map(cb => cb.value);
+    const activeSel = document.getElementById('exportActiveSim');
+    let activeId = activeSel ? activeSel.value : null;
+    if (!checkedIds.includes(activeId)) activeId = checkedIds[0] || null;
+    return { checkedIds, activeId };
+  }
+
+  function regenerateExportFromSelection() {
+    const { checkedIds, activeId } = getExportSelection();
+    const filteredSims = state.sims.filter(s => checkedIds.includes(s.id));
+    const filteredState = { sims: filteredSims, activeId };
+    const html = buildExportedHTML(filteredState);
+    document.getElementById('exportText').value = html;
+    const status = document.getElementById('exportStatus');
+    if (!filteredSims.length) {
+      status.textContent = 'Aucune simulation sélectionnée';
+      status.style.color = 'var(--danger)';
+    } else {
+      status.textContent = Math.round(html.length / 1024) + ' Ko · ' + filteredSims.length + ' simulation(s) → active: ' + (filteredSims.find(s => s.id === activeId)?.name || '?');
+      status.style.color = 'var(--muted)';
+    }
+  }
+
+  function updateExportActiveSimDropdown() {
+    const sel = document.getElementById('exportActiveSim');
+    const checked = [...document.querySelectorAll('#exportSimList input[type=checkbox]:checked')];
+    const prevVal = sel.value;
+    sel.innerHTML = '';
+    checked.forEach(cb => {
+      const opt = document.createElement('option');
+      opt.value = cb.value;
+      opt.textContent = cb.dataset.name;
+      sel.appendChild(opt);
+    });
+    // Essayer de conserver la sélection précédente, sinon prendre la 1ère
+    if ([...sel.options].some(o => o.value === prevVal)) sel.value = prevVal;
+  }
+
+  function openExportModal() {
+    saveCurrentToSim();
+    // Peuple la liste de checkboxes avec toutes les sims disponibles
+    const list = document.getElementById('exportSimList');
+    list.innerHTML = '';
+    state.sims.forEach(s => {
+      const row = document.createElement('label');
+      row.style.cssText = 'display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 4px 8px; border-radius: 4px; font-size: 13px;';
+      row.innerHTML = '<input type="checkbox" value="' + s.id + '" data-name="' + escapeHtml(s.name || '') + '" style="accent-color: var(--accent); cursor: pointer;"><span>' + escapeHtml(s.name || '(sans nom)') + '</span>';
+      // Case cochée par défaut uniquement pour la sim active
+      const cb = row.querySelector('input');
+      cb.checked = (s.id === state.activeId);
+      cb.addEventListener('change', () => {
+        updateExportActiveSimDropdown();
+        regenerateExportFromSelection();
+      });
+      list.appendChild(row);
+    });
+    // Dropdown "active au chargement" : par défaut la sim active actuelle
+    updateExportActiveSimDropdown();
+    const activeSel = document.getElementById('exportActiveSim');
+    activeSel.value = state.activeId;
+    activeSel.onchange = regenerateExportFromSelection;
+
+    regenerateExportFromSelection();
+    document.getElementById('exportModal').hidden = false;
+  }
+
+  function closeExportModal() {
+    document.getElementById('exportModal').hidden = true;
+  }
+
+  async function copyExport() {
+    const html = document.getElementById('exportText').value;
+    try {
+      await navigator.clipboard.writeText(html);
+      document.getElementById('exportStatus').textContent = 'Copié ! Colle dans un éditeur de texte et sauvegarde en .html';
+      document.getElementById('exportStatus').style.color = 'var(--success)';
+    } catch (e) {
+      // Fallback : sélectionne le textarea
+      const ta = document.getElementById('exportText');
+      ta.focus(); ta.select();
+      document.getElementById('exportStatus').textContent = 'Impossible de copier automatiquement — utilise Ctrl+C sur la sélection ci-dessus';
+      document.getElementById('exportStatus').style.color = 'var(--warning)';
+    }
+  }
+
+  async function downloadExport() {
+    const html = document.getElementById('exportText').value;
+    const activeName = (activeSim() && activeSim().name) ? activeSim().name.replace(/[^a-z0-9]+/gi, '-') : 'vibency';
+    const filename = 'vibency-' + activeName.toLowerCase() + '-' + new Date().toISOString().slice(0, 10) + '.html';
+
+    // 1er essai : capability downloads de l'artifact Claude (dans le viewer)
+    try {
+      if (window.claude && window.claude.use) {
+        const downloads = await window.claude.use('downloads');
+        if (downloads) {
+          await downloads.save({ filename, data: html });
+          document.getElementById('exportStatus').textContent = 'Téléchargement proposé : ' + filename;
+          document.getElementById('exportStatus').style.color = 'var(--success)';
+          return;
+        }
+      }
+    } catch (e) { /* fallback */ }
+
+    // Fallback : méthode classique blob + anchor (marche dans un fichier HTML autonome)
+    try {
+      const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = filename;
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      document.getElementById('exportStatus').textContent = 'Téléchargement lancé : ' + filename;
+      document.getElementById('exportStatus').style.color = 'var(--success)';
+    } catch (e) {
+      document.getElementById('exportStatus').textContent = 'Téléchargement bloqué — utilise Copier';
+      document.getElementById('exportStatus').style.color = 'var(--danger)';
+    }
+  }
+
+  function openInNewTab() {
+    const html = document.getElementById('exportText').value;
+    try {
+      const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const w = window.open(url, '_blank');
+      if (!w) {
+        document.getElementById('exportStatus').textContent = 'Popup bloqué par le navigateur — utilise Télécharger ou Copier';
+        document.getElementById('exportStatus').style.color = 'var(--danger)';
+      } else {
+        document.getElementById('exportStatus').textContent = 'Ouvert dans un nouvel onglet — utilise Fichier > Enregistrer sous... pour sauvegarder';
+        document.getElementById('exportStatus').style.color = 'var(--success)';
+      }
+    } catch (e) {
+      document.getElementById('exportStatus').textContent = 'Non supporté — utilise Copier';
+      document.getElementById('exportStatus').style.color = 'var(--danger)';
+    }
+  }
+
+  // ============ FORMATTERS ============
+  const nf = new Intl.NumberFormat('fr-FR');
+  const nf1 = new Intl.NumberFormat('fr-FR', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+  const nf2 = new Intl.NumberFormat('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const eur = (v, d = 0) => new Intl.NumberFormat('fr-FR', {
+    style: 'currency', currency: 'EUR', minimumFractionDigits: d, maximumFractionDigits: d,
+  }).format(v);
+  const pct = (v, d = 1) => new Intl.NumberFormat('fr-FR', {
+    style: 'percent', minimumFractionDigits: d, maximumFractionDigits: d,
+  }).format(v);
+
+  // ============ RENDER KEYWORDS TABLE ============
+  function renderTable() {
+    const body = document.getElementById('kwBody');
+    body.innerHTML = '';
+    keywords.forEach((k, i) => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><input class="cell-input" data-i="${i}" data-f="kw" value="${escapeHtml(k.kw || '')}" placeholder="Mot-cl\u00e9\u2026"></td>
+        <td><input class="cell-input num" type="number" min="0" step="10" data-i="${i}" data-f="vol" value="${k.vol ?? ''}"></td>
+        <td><input class="cell-input num" type="number" min="0" step="0.1" data-i="${i}" data-f="cpc" value="${k.cpc ?? ''}"></td>
+        <td><input class="cell-input num" type="number" min="0" max="100" step="1" data-i="${i}" data-f="ctr" value="${k.ctr ?? ''}"></td>
+        <td class="compute strong" data-out="clics-${i}">\u2013</td>
+        <td class="compute" data-out="leads-${i}">\u2013</td>
+        <td><input class="cell-input num${k.budget == null ? ' auto' : ''}" type="number" min="0" step="10" data-i="${i}" data-f="budget" value="${k.budget != null ? Math.round(k.budget) : ''}" title="Budget allou&eacute; — vide = auto (potentiel max)"></td>
+        <td class="compute" data-out="max-${i}" style="color: var(--muted-2);">\u2013</td>
+        <td class="row-actions"><button class="icon-btn remove-btn" data-i="${i}" title="Supprimer">✕</button></td>
+      `;
+      body.appendChild(tr);
+    });
+    body.querySelectorAll('.cell-input').forEach(el => {
+      el.addEventListener('input', onCellEdit);
+    });
+    body.querySelectorAll('.remove-btn').forEach(el => {
+      el.addEventListener('click', () => removeRow(+el.dataset.i));
+    });
+    updateSortIndicators();
+    recalc();
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[c]));
+  }
+
+  function onCellEdit(e) {
+    const i = +e.target.dataset.i;
+    const f = e.target.dataset.f;
+    const val = e.target.value;
+    if (f === 'kw') keywords[i][f] = val;
+    else if (f === 'budget') {
+      if (val === '') delete keywords[i].budget;
+      else keywords[i].budget = parseFloat(val) || 0;
+    }
+    else keywords[i][f] = val === '' ? 0 : parseFloat(val) || 0;
+    save();
+    recalc();
+  }
+
+  function addRow() {
+    const defaultCTR = parseFloat(document.getElementById('ctrDefault').value) || 10;
+    keywords.push({ kw: '', vol: 0, cpc: 0, ctr: defaultCTR });
+    save();
+    renderTable();
+    setTimeout(() => {
+      const rows = document.querySelectorAll('#kwBody tr');
+      const last = rows[rows.length - 1];
+      last?.querySelector('.cell-input')?.focus();
+    }, 0);
+  }
+
+  function removeRow(i) {
+    keywords.splice(i, 1);
+    if (!keywords.length) {
+      const defaultCTR = parseFloat(document.getElementById('ctrDefault').value) || 10;
+      keywords.push({ kw: '', vol: 0, cpc: 0, ctr: defaultCTR });
+    }
+    save();
+    renderTable();
+  }
+
+  function save() {
+    saveCurrentToSim();
+  }
+
+  // ============ RECALC ============
+  function recalc() {
+    const imprRate = pctVal('imprRate');
+    const convLP = pctVal('convLP');
+    const closing = pctVal('closing');
+    const noshow = pctVal('noshow');
+    const marge = pctVal('marge');
+    const budget = numVal('budget');
+    const panier = numVal('panier');
+
+    // Pass 1 : calcule le théorique de chaque mot-clé et sépare verrouillés/auto
+    const rows = keywords.map((k, i) => {
+      const vol = k.vol || 0;
+      const cpc = k.cpc || 0;
+      const ctr = (k.ctr || 0) / 100;
+      const enchere = cpc > 0 ? cpc + 0.01 : 0.01;
+      const theoClicks = vol * imprRate * ctr;
+      const theoRowCost = theoClicks * enchere;
+      const isLocked = k.budget != null;
+      const lockedBudget = isLocked ? Math.min(k.budget, theoRowCost) : 0;
+      return { i, vol, cpc, ctr, enchere, theoClicks, theoRowCost, isLocked, lockedBudget };
+    });
+
+    const totalLocked = rows.reduce((s, r) => s + (r.isLocked ? r.lockedBudget : 0), 0);
+    const totalUnlockedTheo = rows.reduce((s, r) => s + (!r.isLocked ? r.theoRowCost : 0), 0);
+    const totalTheo = rows.reduce((s, r) => s + r.theoRowCost, 0);
+
+    // Budget restant pour les mots-clés en auto (après les verrouillés)
+    const remainingBudget = Math.max(0, budget - totalLocked);
+    const unlockedScale = totalUnlockedTheo > 0 ? Math.min(1, remainingBudget / totalUnlockedTheo) : 0;
+
+    // Pass 2 : applique le scale aux mots-clés en auto, garde les verrouillés à leur valeur
+    let totVol = 0, totClics = 0, totLeads = 0, totCost = 0, totImpr = 0;
+    const theoCost = totalTheo;
+
+    rows.forEach(r => {
+      const effCost = r.isLocked ? r.lockedBudget : r.theoRowCost * unlockedScale;
+      const effClicks = r.enchere > 0 ? effCost / r.enchere : 0;
+      const effLeads = effClicks * convLP;
+
+      setOut(`clics-${r.i}`, nf1.format(effClicks));
+      setOut(`leads-${r.i}`, nf2.format(effLeads));
+      setOut(`max-${r.i}`, eur(r.theoRowCost, 0));
+
+      const budgetInput = document.querySelector(`[data-i="${r.i}"][data-f="budget"]`);
+      if (budgetInput && document.activeElement !== budgetInput) {
+        budgetInput.value = Math.round(effCost);
+        budgetInput.classList.toggle('auto', !r.isLocked);
+      }
+
+      totVol += r.vol;
+      totImpr += r.vol * imprRate;
+      totClics += effClicks;
+      totLeads += effLeads;
+      totCost += effCost;
+    });
+    const ctrWeighted = totImpr > 0 ? totClics / totImpr : 0;
+
+    // Extras Meta — ajoutés aux totaux downstream (Funnel + KPIs business)
+    // Case à cocher "Actif" : si décoché, les extras sont ignorés (comme s'ils étaient à 0)
+    const metaEnabled = document.getElementById('metaEnabled').checked;
+    const metaBudget = metaEnabled ? numVal('metaBudget') : 0;
+    const metaImpr = metaEnabled ? numVal('metaImpr') : 0;
+    const metaClics = metaEnabled ? numVal('metaClics') : 0;
+    const metaLeads = metaEnabled ? numVal('metaLeads') : 0;
+    const metaClients = metaEnabled ? numVal('metaClients') : 0;
+
+    // Grise visuellement les inputs Meta quand désactivés
+    document.getElementById('metaPanel').style.opacity = metaEnabled ? '1' : '0.45';
+
+    document.getElementById('totVol').textContent = nf.format(totVol);
+    document.getElementById('totClics').textContent = nf1.format(totClics);
+    document.getElementById('totCost').textContent = eur(totCost, 0);
+
+    // Budget bar
+    const pctBudget = budget > 0 ? totCost / budget : 0;
+    const fillPct = Math.min(pctBudget * 100, 100);
+    const fill = document.getElementById('budgetFill');
+    fill.style.width = fillPct + '%';
+    fill.classList.remove('ok', 'warn', 'over');
+    if (totCost > budget * 1.01 && budget > 0) fill.classList.add('over');
+    else if (theoCost > budget && budget > 0) fill.classList.add('warn');  // budget limitant
+    else fill.classList.add('ok');
+    document.getElementById('budgetPct').textContent = pct(pctBudget, 0);
+    document.getElementById('budgetUsed').textContent = eur(totCost, 0);
+    document.getElementById('budgetTarget').textContent = eur(budget, 0);
+    const diffEl = document.getElementById('budgetDiff');
+    const allLocked = keywords.length > 0 && totalUnlockedTheo === 0;
+    if (totCost > budget * 1.01) {
+      // Verrouillés dépassent le budget
+      diffEl.textContent = eur(totCost - budget, 0) + ' au-dessus du budget';
+      diffEl.style.color = 'var(--danger)';
+    } else if (allLocked && budget > totCost) {
+      // Tous verrouillés + budget non utilisé → message d'aide
+      diffEl.innerHTML = eur(budget - totCost, 0) + ' non utilisés &middot; tous les mots-clés sont verrouillés (cliquez sur \u{1F513} Tout en auto)';
+      diffEl.style.color = 'var(--warning)';
+    } else if (theoCost > budget) {
+      // Budget limitant : indique combien il manque pour capter tout le potentiel
+      diffEl.textContent = '+' + eur(theoCost - budget, 0) + ' pour tout capter';
+      diffEl.style.color = 'var(--warning)';
+    } else {
+      // Budget suffisant, il reste de la marge
+      diffEl.textContent = '+' + eur(budget - totCost, 0) + ' non utilisés';
+      diffEl.style.color = 'var(--muted)';
+    }
+
+    // Funnel : combine les stats SEA + les extras Meta
+    const gaRDV = totLeads * (1 - noshow);
+    const gaClients = gaRDV * closing;
+
+    const combClics = totClics + metaClics;
+    const combLeads = totLeads + metaLeads;
+    const combRDV = gaRDV + metaLeads * (1 - noshow);  // meta leads traités comme SEA leads
+    const combClients = gaClients + metaClients;
+    const combCost = totCost + metaBudget;
+
+    const ca = combClients * panier;
+    const margeBrute = ca * marge;
+    const rentabilite = margeBrute - combCost;
+    const cpcMoy = combClics > 0 ? combCost / combClics : 0;
+    const cplMoy = combLeads > 0 ? combCost / combLeads : 0;
+    const cpaMoy = combClients > 0 ? combCost / combClients : 0;
+    const roas = combCost > 0 ? margeBrute / combCost : 0;
+
+    // Impressions effectives SEA : clics / CTR pondéré, + impressions Meta ajoutées
+    const effImprSEA = ctrWeighted > 0 ? totClics / ctrWeighted : 0;
+    const combImpr = effImprSEA + metaImpr;
+    const combCtr = combImpr > 0 ? combClics / combImpr : 0;
+    renderFunnel({
+      vol: totVol, impr: combImpr, clics: combClics, leads: combLeads,
+      rdv: combRDV, clients: combClients, imprRate, ctr: combCtr, convLP, noshow, closing,
+    });
+
+
+    document.getElementById('kpiCPC').textContent = cpcMoy > 0 ? eur(cpcMoy, 2) : '\u2013';
+    document.getElementById('kpiCPL').textContent = cplMoy > 0 ? eur(cplMoy, 0) : '\u2013';
+    document.getElementById('kpiCPA').textContent = cpaMoy > 0 ? eur(cpaMoy, 0) : '\u2013';
+    document.getElementById('kpiCA').textContent = ca > 0 ? eur(ca, 0) : '\u2013';
+    document.getElementById('kpiClients').textContent = combClients > 0
+      ? `${nf1.format(combClients)} clients / mois` : '\u2013 clients';
+    document.getElementById('kpiMarge').textContent = margeBrute > 0 ? eur(margeBrute, 0) : '\u2013';
+    document.getElementById('kpiMargePct').textContent = ca > 0
+      ? `${pct(marge, 0)} de CA` : '\u2013 de CA';
+
+    const rentEl = document.getElementById('kpiRent');
+    rentEl.textContent = rentabilite !== 0 ? (rentabilite >= 0 ? '+' : '') + eur(rentabilite, 0) : '\u2013';
+    rentEl.className = 'tile-value ' + (rentabilite >= 0 ? 'success' : 'danger');
+    document.getElementById('kpiROAS').textContent = roas > 0
+      ? `ROAS ${nf1.format(roas)}\u00d7` : 'ROAS \u2013';
+  }
+
+  function renderFunnel(d) {
+    const t = document.getElementById('funnelTable');
+    const steps = [
+      { n: 1, name: 'Volume de recherche', val: nf.format(d.vol), rate: '/ mois', formula: 'somme des volumes mots-cl\u00e9s' },
+      { n: 2, name: 'Impressions', val: nf.format(Math.round(d.impr)), rate: pct(d.imprRate, 0) + ' du volume', formula: `volume \u00d7 ${pct(d.imprRate, 0)}` },
+      { n: 3, name: 'Clics', val: nf1.format(d.clics), rate: pct(d.ctr, 1) + ' CTR moyen', formula: '\u03a3 (volume \u00d7 impr \u00d7 CTR par mot-cl\u00e9)', cls: 'emphasis' },
+      { n: 4, name: 'Leads (demandes)', val: nf2.format(d.leads), rate: pct(d.convLP, 1) + ' conv LP', formula: `clics \u00d7 ${pct(d.convLP, 1)}` },
+      { n: 5, name: 'RDV effectifs', val: nf2.format(d.rdv), rate: pct(1 - d.noshow, 0) + ' pr\u00e9sence', formula: `leads \u00d7 ${pct(1 - d.noshow, 0)}` },
+      { n: 6, name: 'Clients sign\u00e9s', val: nf2.format(d.clients), rate: pct(d.closing, 0) + ' closing', formula: `RDV \u00d7 ${pct(d.closing, 0)}`, cls: 'success-row' },
+    ];
+    t.innerHTML = steps.map(s => `
+      <div class="funnel-row ${s.cls || ''}">
+        <div class="funnel-step">
+          <span class="step-num">${s.n}</span>
+          <div>
+            <div class="step-name">${s.name}</div>
+            <div class="step-formula">${s.formula}</div>
+          </div>
+        </div>
+        <div class="funnel-value">${s.val}</div>
+        <div class="funnel-rate">${s.rate}</div>
+      </div>
+    `).join('');
+  }
+
+  function setOut(id, val) {
+    const el = document.querySelector(`[data-out="${id}"]`);
+    if (el) el.textContent = val;
+  }
+
+  function pctVal(id) { return (parseFloat(document.getElementById(id).value) || 0) / 100; }
+  function numVal(id) { return parseFloat(document.getElementById(id).value) || 0; }
+
+  // ============ THEME TOGGLE ============
+  function applyTheme(t) {
+    if (t === 'dark' || t === 'light') document.documentElement.setAttribute('data-theme', t);
+    else document.documentElement.removeAttribute('data-theme');
+    document.getElementById('theme-icon').textContent =
+      (t === 'dark' || (!t && matchMedia('(prefers-color-scheme: dark)').matches)) ? '☀️' : '🌙';
+  }
+  function toggleTheme() {
+    const cur = document.documentElement.getAttribute('data-theme');
+    const dark = cur === 'dark' || (!cur && matchMedia('(prefers-color-scheme: dark)').matches);
+    const next = dark ? 'light' : 'dark';
+    applyTheme(next);
+    try { localStorage.setItem('sea-estimator-theme', next); } catch (e) {}
+  }
+  try {
+    const savedTheme = localStorage.getItem('sea-estimator-theme');
+    if (savedTheme) applyTheme(savedTheme);
+    else applyTheme(null);
+  } catch (e) { applyTheme(null); }
+
+  function resetToDefaults() {
+    keywords = DEFAULT_KEYWORDS.map(k => ({ ...k }));
+    save();
+    renderTable();
+  }
+
+  function unlockAll() {
+    keywords.forEach(k => { delete k.budget; });
+    save();
+    renderTable();
+  }
+
+  // ============ SORT ============
+  let sortState = { col: null, dir: 'asc' };
+
+  function sortValueOf(k, col, m, unlockedScale, convLP) {
+    // m contient { theoClicks, theoCost, enchere, isLocked, lockedBudget }
+    const effCost = m.isLocked ? m.lockedBudget : m.theoCost * unlockedScale;
+    const effClicks = m.enchere > 0 ? effCost / m.enchere : 0;
+    const effLeads = effClicks * convLP;
+    switch (col) {
+      case 'kw': return (k.kw || '').toLowerCase();
+      case 'vol': return k.vol || 0;
+      case 'cpc': return k.cpc || 0;
+      case 'ctr': return k.ctr || 0;
+      case 'clics': return effClicks;
+      case 'leads': return effLeads;
+      case 'budget': return effCost;
+      case 'max': return m.theoCost;
+      default: return 0;
+    }
+  }
+
+  function applySort() {
+    if (!sortState.col) return;
+    const imprRate = parseFloat(document.getElementById('imprRate').value) / 100 || 0.6;
+    const convLP = parseFloat(document.getElementById('convLP').value) / 100 || 0.075;
+    const budget = parseFloat(document.getElementById('budget').value) || 0;
+
+    // Pré-calcule les valeurs effectives (budget scalé) pour que le tri suive l'affichage
+    const metrics = new Map();
+    let totalLocked = 0, totalUnlockedTheo = 0;
+    keywords.forEach(k => {
+      const vol = k.vol || 0;
+      const cpc = k.cpc || 0;
+      const ctr = (k.ctr || 0) / 100;
+      const enchere = cpc > 0 ? cpc + 0.01 : 0.01;
+      const theoClicks = vol * imprRate * ctr;
+      const theoCost = theoClicks * enchere;
+      const isLocked = k.budget != null;
+      const lockedBudget = isLocked ? Math.min(k.budget, theoCost) : 0;
+      metrics.set(k, { theoClicks, theoCost, enchere, isLocked, lockedBudget });
+      if (isLocked) totalLocked += lockedBudget;
+      else totalUnlockedTheo += theoCost;
+    });
+    const remainingBudget = Math.max(0, budget - totalLocked);
+    const unlockedScale = totalUnlockedTheo > 0 ? Math.min(1, remainingBudget / totalUnlockedTheo) : 0;
+
+    keywords.sort((a, b) => {
+      const av = sortValueOf(a, sortState.col, metrics.get(a), unlockedScale, convLP);
+      const bv = sortValueOf(b, sortState.col, metrics.get(b), unlockedScale, convLP);
+      let cmp;
+      if (typeof av === 'string') cmp = av.localeCompare(bv);
+      else cmp = av - bv;
+      return sortState.dir === 'asc' ? cmp : -cmp;
+    });
+  }
+
+  function updateSortIndicators() {
+    document.querySelectorAll('#kwHeaderRow th.sortable').forEach(th => {
+      const col = th.dataset.sort;
+      const arrow = th.querySelector('.sort-arrow');
+      th.classList.remove('sort-active');
+      if (col === sortState.col) {
+        th.classList.add('sort-active');
+        arrow.innerHTML = sortState.dir === 'asc' ? '&#8593;' : '&#8595;';
+      } else {
+        arrow.innerHTML = '&#8597;';
+      }
+    });
+  }
+
+  function onSortClick(e) {
+    const th = e.currentTarget;
+    const col = th.dataset.sort;
+    if (sortState.col === col) {
+      sortState.dir = sortState.dir === 'asc' ? 'desc' : 'asc';
+    } else {
+      sortState.col = col;
+      sortState.dir = (col === 'kw') ? 'asc' : 'desc';  // numbers desc by default
+    }
+    applySort();
+    save();
+    renderTable();
+  }
+
+  function parseImportText(text) {
+    const defaultCTR = parseFloat(document.getElementById('ctrDefault').value) || 10;
+    const lines = text.split(/\r?\n/);
+    const out = [];
+    for (const raw of lines) {
+      const line = raw.trim();
+      if (!line || line.startsWith('#')) continue;
+      // Split by tab, semicolon, or comma (in that priority)
+      let parts;
+      if (line.includes('\t')) parts = line.split('\t');
+      else if (line.includes(';')) parts = line.split(';');
+      else parts = line.split(',');
+      parts = parts.map(p => p.trim()).filter(p => p !== '');
+      if (parts.length < 2) continue;
+      const kw = parts[0];
+      // Handle French thousand separator (space) and decimal separator (comma)
+      const parseNum = s => parseFloat(s.replace(/\s/g, '').replace(/[€$£%]/g, '').replace(',', '.')) || 0;
+      const vol = parseNum(parts[1]);
+      const cpc = parts.length >= 3 ? parseNum(parts[2]) : 0;
+      const ctr = parts.length >= 4 ? parseNum(parts[3]) : defaultCTR;
+      out.push({ kw, vol, cpc, ctr });
+    }
+    return out;
+  }
+
+  function toggleImportPanel(show) {
+    const panel = document.getElementById('importPanel');
+    panel.hidden = show === false || (show === undefined && !panel.hidden);
+    if (!panel.hidden) {
+      document.getElementById('importStatus').textContent = '';
+      document.getElementById('importText').focus();
+    }
+  }
+
+  function doImport(replace) {
+    const text = document.getElementById('importText').value;
+    const parsed = parseImportText(text);
+    if (!parsed.length) {
+      document.getElementById('importStatus').textContent = 'Aucun mot-clé valide détecté';
+      document.getElementById('importStatus').style.color = 'var(--danger)';
+      return;
+    }
+    if (replace) keywords = parsed;
+    else keywords = keywords.concat(parsed);
+    save();
+    renderTable();
+    document.getElementById('importStatus').textContent = parsed.length + ' mot-clé(s) ' + (replace ? 'chargé(s)' : 'ajouté(s)');
+    document.getElementById('importStatus').style.color = 'var(--success)';
+    document.getElementById('importText').value = '';
+    setTimeout(() => toggleImportPanel(false), 1200);
+  }
+
+  // ============ INIT ============
+  // Toggle Extra Meta panel
+  document.getElementById('metaToggle').addEventListener('click', () => {
+    const panel = document.getElementById('metaPanel');
+    const chev = document.getElementById('metaChevron');
+    panel.hidden = !panel.hidden;
+    chev.style.transform = panel.hidden ? '' : 'rotate(90deg)';
+  });
+  // Checkbox clicks don't toggle the panel
+  document.getElementById('metaEnabledLabel').addEventListener('click', e => e.stopPropagation());
+  document.getElementById('metaEnabled').addEventListener('change', () => { saveCurrentToSim(); recalc(); });
+  document.querySelectorAll('.params input').forEach(el => el.addEventListener('input', () => { saveCurrentToSim(); recalc(); }));
+  document.getElementById('addRowBtn').addEventListener('click', addRow);
+  document.getElementById('resetBtn').addEventListener('click', resetToDefaults);
+  document.getElementById('importBtn').addEventListener('click', () => toggleImportPanel());
+  document.getElementById('unlockAllBtn').addEventListener('click', unlockAll);
+  document.querySelectorAll('#kwHeaderRow th.sortable').forEach(th => {
+    th.addEventListener('click', onSortClick);
+  });
+  document.getElementById('importDoBtn').addEventListener('click', () => doImport(false));
+  document.getElementById('importReplaceBtn').addEventListener('click', () => doImport(true));
+  document.getElementById('importCancelBtn').addEventListener('click', () => toggleImportPanel(false));
+  document.getElementById('themeBtn').addEventListener('click', toggleTheme);
+  document.getElementById('simName').addEventListener('input', e => renameSim(e.target.value));
+  document.getElementById('simSelect').addEventListener('change', e => switchSim(e.target.value));
+  document.getElementById('simNewBtn').addEventListener('click', newSim);
+  document.getElementById('simDeleteBtn').addEventListener('click', deleteSim);
+  document.getElementById('simExportBtn').addEventListener('click', openExportModal);
+  document.getElementById('exportCloseBtn').addEventListener('click', closeExportModal);
+  document.getElementById('exportCopyBtn').addEventListener('click', copyExport);
+  document.getElementById('exportDownloadBtn').addEventListener('click', downloadExport);
+  document.getElementById('exportOpenTabBtn').addEventListener('click', openInNewTab);
+  loadActiveSim();
+</script>
+</body>
+</html>

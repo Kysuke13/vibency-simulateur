@@ -1,0 +1,5 @@
+# Site statique : aucune étape de build.
+# Sur Netlify : Build command vide, Publish directory = .
+
+[build]
+  publish = "."
