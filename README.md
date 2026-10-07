@@ -1,35 +1,35 @@
 # Vibency Simulateur
 
-Simulateur de budget et de conversions Google Ads. Une page statique : paramètres, mots-clés, funnel et indicateurs. Les simulations restent dans le navigateur (`localStorage`).
+Simulateur de budget et de conversions Google Ads.
 
-## Structure
+La page d’accueil `/` demande une connexion. Chaque simulation a aussi une page publique, par exemple `/notham-grenoble`, où l’on peut modifier cette simulation seulement.
 
-```
-.
-├── index.html      # Page complète (HTML, CSS et JS)
-├── .env            # URL et clé anon Supabase (non versionné)
-├── build.js        # Produit config.js à partir du .env
-├── netlify.toml    # Build : node build.js, publication à la racine
-└── README.md
-```
-
-L’export HTML embarque les simulations choisies dans le fichier téléchargé, pour qu’un client puisse l’ouvrir seul. Le CSS et le JS restent donc dans `index.html`.
+Le nom est transformé en adresse : minuscules, sans accents, espaces remplacés par `-`. Renommer une simulation depuis le compte connecté met à jour cette adresse.
 
 ## Aperçu local
 
-Copier `.env.example` vers `.env` et renseigner `SUPABASE_URL` et `SUPABASE_ANON_KEY`, puis :
+Renseigner `.env` (voir `.env.example`), appliquer la migration Supabase, puis :
 
 ```bash
-node build.js
-npx --yes serve -l 8123
+node dev-server.js
 ```
 
-Puis ouvrir http://localhost:8123
+Puis ouvrir http://localhost:8123. `netlify dev` convient aussi.
 
 ## Déploiement Netlify
 
-1. Ce dépôt est sur GitHub.
-2. Dans Netlify : **Add new site** → **Import an existing project** → GitHub → `vibency-simulateur`.
-3. Variables d’environnement du site : `SUPABASE_URL` et `SUPABASE_ANON_KEY` (les mêmes que dans `.env`).
-4. La commande de build est `node build.js`, le dossier publié est `.` (`netlify.toml`).
-5. Déployer. Chaque push sur `main` redéploie le site.
+Variables d’environnement du site :
+
+- `SUPABASE_URL`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `VIBENCY_USERNAME`
+- `VIBENCY_PASSWORD`
+- `SESSION_SECRET`
+
+Aucune commande de build. Le dossier publié est `.`. Les fonctions sont dans `netlify/functions`.
+
+## Migration
+
+```bash
+supabase db push
+```

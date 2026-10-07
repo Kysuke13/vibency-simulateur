@@ -1,6 +1,20 @@
-# Génère config.js depuis les variables d'environnement, puis publie la racine.
-# En local : fichier .env. Sur Netlify : SUPABASE_URL et SUPABASE_ANON_KEY.
+# Les fonctions lisent les variables au moment de l'appel.
+# Sur Netlify : SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY,
+# VIBENCY_USERNAME, VIBENCY_PASSWORD, SESSION_SECRET.
 
 [build]
-  command = "node build.js"
   publish = "."
+  functions = "netlify/functions"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
