@@ -178,6 +178,14 @@
   .sim-btn.primary { background: var(--accent); border-color: var(--accent); color: white; }
   .sim-btn.primary:hover { background: var(--accent-hover); border-color: var(--accent-hover); color: white; }
   .sim-btn.danger:hover { border-color: var(--danger); color: var(--danger); }
+  .cloud-status {
+    margin-left: auto;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--muted);
+  }
+  .cloud-status.ok { color: var(--success); }
+  .cloud-status.err { color: var(--danger); }
 
   /* Section */
   section {
@@ -569,6 +577,7 @@
       <button class="sim-btn primary" id="simNewBtn">+ Nouvelle</button>
       <button class="sim-btn" id="simExportBtn" title="Exporter en HTML standalone avec les sims int&eacute;gr&eacute;es">&#128229; Export HTML</button>
       <button class="sim-btn danger" id="simDeleteBtn" title="Supprimer cette simulation">&times;</button>
+      <span id="cloudStatus" class="cloud-status" hidden></span>
     </div>
   </section>
 
@@ -814,6 +823,8 @@
   </div>
 </div>
 
+<script src="config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.49.4/dist/umd/supabase.js"></script>
 <script>
   // ============ STATE ============
   const DEFAULT_KEYWORDS = [
@@ -850,6 +861,11 @@
 
   let keywords = [];
   let state = { sims: [], activeId: null };
+  let hydratedFromStorage = false;
+  let localDefaultOnly = false;
+
+  const SUPABASE_URL = (window.VIBENCY_SUPABASE && window.VIBENCY_SUPABASE.url) || '';
+  const SUPABASE_ANON_KEY = (window.VIBENCY_SUPABASE && window.VIBENCY_SUPABASE.anonKey) || '';
 
   // Détermine la clé localStorage : si on est dans un export (initial-state présent avec exportId),
   // on utilise une clé unique à cet export pour éviter le partage de localStorage entre fichiers file://
@@ -865,11 +881,20 @@
     }
   } catch (e) { embeddedState = null; }
 
+  // Les HTML exportés pour un client restent sur son localStorage.
+  // Seule l'app hébergée (sans exportId) écrit dans Supabase.
+  const CLOUD_ENABLED = !(embeddedState && embeddedState.exportId);
+  let sb = null;
+  if (CLOUD_ENABLED && SUPABASE_URL && SUPABASE_ANON_KEY && window.supabase && typeof window.supabase.createClient === 'function') {
+    sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  }
+
   // Load state (multi-sim) : priorité = localStorage > initial embarqué dans l'HTML > migration ancienne
   try {
     const storedState = localStorage.getItem(STORAGE_KEY);
     if (storedState) {
       state = JSON.parse(storedState);
+      hydratedFromStorage = !!(state && state.sims && state.sims.length);
     } else if (embeddedState) {
       // Charge l'état embarqué (depuis l'export HTML) la toute première fois
       state = embeddedState;
@@ -894,7 +919,8 @@
     }
   } catch (e) { state = { sims: [], activeId: null }; }
 
-  // Ensure at least one sim exists
+  // Ensure at least one sim exists. Si elle n'est que locale et que Supabase
+  // a déjà des lignes, pullCloud() la remplace.
   if (!state.sims || !state.sims.length) {
     const id = 'sim_' + Date.now();
     state = {
@@ -904,6 +930,7 @@
       }],
       activeId: id,
     };
+    localDefaultOnly = !hydratedFromStorage;
   }
   if (!state.activeId || !state.sims.find(s => s.id === state.activeId)) {
     state.activeId = state.sims[0].id;
@@ -911,8 +938,115 @@
 
   function activeSim() { return state.sims.find(s => s.id === state.activeId); }
 
-  function saveState() {
+  function persistLocal() {
     try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); } catch (e) {}
+  }
+
+  const dirtySimIds = new Set();
+  let syncTimer = null;
+
+  function setCloudStatus(text, kind) {
+    const el = document.getElementById('cloudStatus');
+    if (!el) return;
+    if (!sb) { el.hidden = true; return; }
+    el.hidden = false;
+    el.textContent = text;
+    el.className = 'cloud-status' + (kind ? ' ' + kind : '');
+  }
+
+  function simToRow(s) {
+    return {
+      id: s.id,
+      name: s.name || '',
+      keywords: s.keywords || [],
+      params: s.params || {},
+      updated_at: new Date(s.updatedAt || Date.now()).toISOString(),
+    };
+  }
+
+  function rowToSim(row) {
+    return {
+      id: row.id,
+      name: row.name || '',
+      keywords: Array.isArray(row.keywords) ? row.keywords : [],
+      params: row.params && typeof row.params === 'object' ? row.params : {},
+      updatedAt: row.updated_at ? new Date(row.updated_at).getTime() : Date.now(),
+    };
+  }
+
+  function markDirty(id) {
+    if (!sb || !id) return;
+    dirtySimIds.add(id);
+    clearTimeout(syncTimer);
+    syncTimer = setTimeout(flushCloud, 500);
+  }
+
+  function saveState() {
+    persistLocal();
+    const s = activeSim();
+    if (s) markDirty(s.id);
+  }
+
+  async function flushCloud() {
+    if (!sb || !dirtySimIds.size) return;
+    const ids = [...dirtySimIds];
+    dirtySimIds.clear();
+    const rows = [];
+    ids.forEach(id => {
+      const s = state.sims.find(x => x.id === id);
+      if (s) rows.push(simToRow(s));
+    });
+    if (!rows.length) return;
+    setCloudStatus('Enregistrement…');
+    const { error } = await sb.from('simulations').upsert(rows);
+    if (error) {
+      ids.forEach(id => dirtySimIds.add(id));
+      setCloudStatus('Erreur d\'enregistrement', 'err');
+      return;
+    }
+    setCloudStatus('Enregistré', 'ok');
+  }
+
+  async function cloudDelete(id) {
+    if (!sb || !id) return;
+    dirtySimIds.delete(id);
+    const { error } = await sb.from('simulations').delete().eq('id', id);
+    if (error) setCloudStatus('Erreur de suppression', 'err');
+  }
+
+  async function pullCloud() {
+    if (!sb) return;
+    setCloudStatus('Synchronisation…');
+    const { data, error } = await sb.from('simulations').select('id,name,keywords,params,updated_at');
+    if (error) {
+      persistLocal();
+      setCloudStatus('Hors ligne — copie locale', 'err');
+      return;
+    }
+    const remote = new Map((data || []).map(row => [row.id, rowToSim(row)]));
+    state.sims.forEach(local => {
+      if (localDefaultOnly && !dirtySimIds.has(local.id)) return;
+      const other = remote.get(local.id);
+      if (!other || (local.updatedAt || 0) > (other.updatedAt || 0)) {
+        remote.set(local.id, local);
+        markDirty(local.id);
+      }
+    });
+    const sims = [...remote.values()].sort((a, b) => (a.updatedAt || 0) - (b.updatedAt || 0));
+    if (!sims.length) {
+      localDefaultOnly = false;
+      markDirty(state.activeId);
+      persistLocal();
+      return;
+    }
+    const previousActive = state.activeId;
+    const keepActive = !localDefaultOnly && sims.some(s => s.id === previousActive);
+    state.sims = sims;
+    state.activeId = keepActive ? previousActive : sims[sims.length - 1].id;
+    localDefaultOnly = false;
+    persistLocal();
+    loadActiveSim();
+    if (!dirtySimIds.size) setCloudStatus('Synchronisé', 'ok');
   }
 
   function saveCurrentToSim() {
@@ -992,8 +1126,10 @@
     }
     const idx = state.sims.findIndex(s => s.id === state.activeId);
     if (idx === -1) return;
+    const removedId = state.activeId;
     state.sims.splice(idx, 1);
     state.activeId = state.sims[Math.min(idx, state.sims.length - 1)].id;
+    cloudDelete(removedId);
     saveState();
     loadActiveSim();
   }
@@ -1677,6 +1813,7 @@
   document.getElementById('exportDownloadBtn').addEventListener('click', downloadExport);
   document.getElementById('exportOpenTabBtn').addEventListener('click', openInNewTab);
   loadActiveSim();
+  pullCloud();
 </script>
 </body>
 </html>
